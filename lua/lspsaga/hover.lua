@@ -152,9 +152,31 @@ function hover:open_floating_preview(res, option_fn)
   libs.scroll_in_preview(bufnr, self.preview_winid)
 end
 
+function hover:xdump(tbl, depth)
+  if depth == nil then
+    depth = 0
+  end
+  if depth > 100 then
+    print('Too many depth')
+    return
+  end
+  for k, v in pairs(tbl) do
+    if type(v) == 'table' then
+      print(string.rep('  ', depth) .. tostring(k) .. ': ')
+      self:xdump(v, depth + 1)
+    else
+      print(string.rep('  ', depth) .. tostring(k) .. ': ' .. tostring(v))
+    end
+  end
+end
+
 function hover:do_request(args)
   local params = util.make_position_params()
   lsp.buf_request(0, 'textDocument/hover', params, function(_, result, ctx)
+    if (not result or not result.contents.kind or result.contents.kind ~= 'markdown') then
+      return
+    end
+
     if api.nvim_get_current_buf() ~= ctx.bufnr then
       return
     end
